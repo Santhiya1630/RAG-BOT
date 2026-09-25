@@ -1,30 +1,20 @@
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 
 
 class BGEEmbeddings:
-    """Lightweight embedding wrapper for all-MiniLM-L6-v2."""
+    """Lightweight embedding wrapper using FastEmbed."""
 
     def __init__(self, model_name):
-        self.model = SentenceTransformer(
-            model_name,
-            device="cpu"
+        self.model = TextEmbedding(
+            model_name=model_name
         )
 
     def encode(self, texts):
         if isinstance(texts, str):
             texts = [texts]
 
-        vectors = self.model.encode(
-            texts,
-            normalize_embeddings=True,
-            show_progress_bar=False,
-            batch_size=1
-        )
-
-        return vectors.tolist()
+        vectors = list(self.model.embed(texts))
+        return [vector.tolist() for vector in vectors]
 
     def dimension(self):
-        if hasattr(self.model, "get_embedding_dimension"):
-            return self.model.get_embedding_dimension()
-
-        return self.model.get_sentence_embedding_dimension()
+        return 384
