@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG AI Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div>
+                <div class="brand">RAG AI Assistant</div>
+                <div class="subtitle">Ask questions from your uploaded documents</div>
+            </div>
+            <button id="clearBtn" class="ghost-btn">＋ New Chat</button>
+        </header>
+
+        <main class="workspace">
+            <aside class="sidebar">
+                <div class="panel-title">Documents</div>
+
+                <label id="dropZone" class="upload-box">
+                    <input id="fileInput" type="file" multiple>
+                    <span class="upload-icon">↑</span>
+                    <strong>Upload document</strong>
+                    <small>PDF, DOCX or TXT</small>
+                    <span class="browse">Choose a file</span>
+                </label>
+
+                <div id="uploadStatus" class="status"></div>
+                <div id="documentList" class="document-list"></div>
+            </aside>
+
+            <section class="chat-panel">
+                <div id="messages" class="messages">
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-icon">✦</div>
+                        <h1>Ask your documents</h1>
+                        <p>Upload a PDF, DOCX, or TXT file, then ask a question about its content.</p>
+                    </div>
+                </div>
+
+                <div class="composer-wrap">
+                    <textarea id="messageInput" rows="1" placeholder="Ask something about your documents..."></textarea>
+                    <button id="sendBtn" class="send-btn">Send</button>
+                    <div class="hint">Enter to send · Shift + Enter for a new line</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
