@@ -37,7 +37,7 @@ def get_config():
         "qdrant_api_key": qdrant_api_key,
         "qdrant_timeout": int(os.getenv("QDRANT_TIMEOUT", "60")),
         "qdrant_collection": os.getenv("QDRANT_COLLECTION", "rag_documents").strip(),
-        "embedding_model": os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2").strip(),
+        "embedding_model": os.getenv("EMBEDDING_MODEL", "gemini-embedding-001").strip(),
         "chunk_size": int(os.getenv("CHUNK_SIZE", "800")),
         "chunk_overlap": int(os.getenv("CHUNK_OVERLAP", "100")),
         "top_k": int(os.getenv("TOP_K", "5")),

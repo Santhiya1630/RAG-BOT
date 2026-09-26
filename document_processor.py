@@ -1,10 +1,10 @@
 from pathlib import Path
 import hashlib
 import io
+import re
 
 import pymupdf as fitz
 from docx import Document
-from llama_index.core.node_parser import SentenceSplitter
 
 
 ALLOWED_EXTENSIONS = {"pdf", "docx", "txt"}
@@ -55,6 +55,70 @@ def _txt_text(data):
     return [{"text": text, "page": None}] if text else []
 
 
+def _split_text(text, chunk_size=800, chunk_overlap=100):
+    """Splits text into chunks respecting sentence boundaries without external dependencies."""
+    if not text:
+        return []
+    if len(text) <= chunk_size:
+        return [text]
+
+    sentences = re.split(r'(?<=[.!?\n])\s+', text)
+    chunks = []
+    current_chunk = []
+    current_len = 0
+
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+
+        if len(sentence) > chunk_size:
+            words = sentence.split()
+            sub_chunk = []
+            sub_len = 0
+            for word in words:
+                if sub_len + len(word) + 1 > chunk_size and sub_chunk:
+                    chunks.append(" ".join(sub_chunk))
+                    overlap_words = []
+                    overlap_len = 0
+                    for w in reversed(sub_chunk):
+                        if overlap_len + len(w) + 1 <= chunk_overlap:
+                            overlap_words.insert(0, w)
+                            overlap_len += len(w) + 1
+                        else:
+                            break
+                    sub_chunk = overlap_words + [word]
+                    sub_len = sum(len(w) for w in sub_chunk) + len(sub_chunk) - 1
+                else:
+                    sub_chunk.append(word)
+                    sub_len += len(word) + 1
+            if sub_chunk:
+                chunks.append(" ".join(sub_chunk))
+            continue
+
+        if current_len + len(sentence) + 1 > chunk_size and current_chunk:
+            chunks.append(" ".join(current_chunk))
+
+            overlap_sentences = []
+            overlap_len = 0
+            for s in reversed(current_chunk):
+                if overlap_len + len(s) + 1 <= chunk_overlap:
+                    overlap_sentences.insert(0, s)
+                    overlap_len += len(s) + 1
+                else:
+                    break
+            current_chunk = overlap_sentences + [sentence]
+            current_len = sum(len(s) for s in current_chunk) + len(current_chunk) - 1
+        else:
+            current_chunk.append(sentence)
+            current_len += len(sentence) + 1
+
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+
+    return chunks
+
+
 def process_document(data, filename, chunk_size=800, chunk_overlap=100):
     ext = Path(filename).suffix.lower().lstrip(".")
     if ext not in ALLOWED_EXTENSIONS:
@@ -72,16 +136,11 @@ def process_document(data, filename, chunk_size=800, chunk_overlap=100):
     if not page_parts:
         raise ValueError("The uploaded document does not contain readable text.")
 
-    splitter = SentenceSplitter(
-        chunk_size=chunk_size,
-        chunk_overlap=chunk_overlap,
-    )
-
     chunks = []
     chunk_index = 0
 
     for part in page_parts:
-        nodes = splitter.split_text(part["text"])
+        nodes = _split_text(part["text"], chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         for node_text in nodes:
             cleaned = _clean(node_text)
             if not cleaned:

@@ -9,7 +9,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams, Filter, FieldCondition, MatchValue
 
 from document_processor import process_document
-from embeddings import BGEEmbeddings
+from embeddings import GeminiEmbeddings
 
 
 class RAGEngine:
@@ -24,7 +24,11 @@ class RAGEngine:
             timeout=config.get("qdrant_timeout", 60),
         )
 
-        self.embeddings = BGEEmbeddings(config["embedding_model"])
+        self.embeddings = GeminiEmbeddings(
+            api_key=config["gemini_api_key"],
+            model_name=config.get("embedding_model", "gemini-embedding-001"),
+            dimension=384,
+        )
         self.gemini = genai.Client(api_key=config["gemini_api_key"])
         self.collection = config["qdrant_collection"]
 
